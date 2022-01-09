@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.Json;
 using EventStore.Client;
 
 namespace EventStore.Library.Core;
@@ -8,6 +9,7 @@ public class EventStoreOptions
     public static JsonSerializerOptions SerializerOptions { get; private set; } = new(JsonSerializerDefaults.General);
     public EventStoreClientOptions ClientOptions { get; }
     public EventStoreClientOperationOptions ClientOperationOptions { get; }
+ 
 
     public EventStoreOptions(
         EventStoreClientOptions clientOptions,

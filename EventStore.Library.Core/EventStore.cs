@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 using EventStore.Client;
 using EventStore.Library.Core.Domain.Aggregate;
 using EventStore.Library.Core.Event;
@@ -29,19 +28,6 @@ public class EventStore : IEventStore
             throw new StreamNotFoundException(id);
 
         return aggregate;
-    }
-
-    public async IAsyncEnumerable<TAggregate> Load<TId, TAggregate, TEvent>(
-        IEnumerable<TId> ids,
-        StreamPosition position = default,
-        int maxEvents = 100,
-        [EnumeratorCancellation] CancellationToken cancellationToken = default)
-        where TEvent : IDomainEvent<TId>
-        where TId : StreamId
-        where TAggregate : class, IAggregateRoot<TId, TEvent>, new()
-    {
-        foreach (var id in ids.ToArray())
-            yield return await Load<TId, TAggregate, TEvent>(id, position, maxEvents, cancellationToken);
     }
 
     public async Task<TAggregate?> TryLoad<TId, TAggregate, TEvent>(
@@ -77,7 +63,7 @@ public class EventStore : IEventStore
         return aggregate;
     }
 
-    public async Task<TAggregate[]> LoadInParallel<TId, TAggregate, TEvent>(
+    public async Task<TAggregate[]> Load<TId, TAggregate, TEvent>(
         IEnumerable<TId> ids,
         StreamPosition position = default,
         int maxEvents = 100,
@@ -169,34 +155,43 @@ public class EventStore : IEventStore
         IEnumerable<TAggregate> aggregates,
         StreamState streamState,
         int batchSize = 2000,
-        bool shouldProcess = true,
-        CancellationToken cancellationToken = default)
-        where TEvent : IDomainEvent<TId>
-        where TId : StreamId
-        where TAggregate : class, IAggregateRoot<TId, TEvent>, new()
-    {
-        foreach (var aggregate in aggregates.ToArray())
-            await CommitEvents<TId, TAggregate, TEvent>(aggregate, streamState, batchSize, shouldProcess,
-                cancellationToken);
-    }
-
-    public async Task CommitEventsParallel<TId, TAggregate, TEvent>(
-        IEnumerable<TAggregate> aggregates,
-        StreamState streamState,
         int? maxDegreeOfParallelism = null,
         CancellationToken cancellationToken = default)
-        where TEvent : IDomainEvent<TId>
         where TId : StreamId
         where TAggregate : class, IAggregateRoot<TId, TEvent>, new()
+        where TEvent : IDomainEvent<TId>
     {
         var parallelOptions = GetParallelOptions(cancellationToken, maxDegreeOfParallelism);
 
         await Parallel.ForEachAsync(aggregates, parallelOptions, async (aggregate, token) =>
-            await CommitEvents<TId, TAggregate, TEvent>(aggregate, streamState, cancellationToken: token)
+            await CommitEvents<TId, TAggregate, TEvent>(aggregate, streamState, batchSize, cancellationToken: token)
         );
     }
 
-    public async Task CommitEventsInOrder<TId, TAggregate, TEvent>(
+    public async Task CommitEvents<TId, TAggregate, TEvent>(
+        IEnumerable<TAggregate> aggregates, 
+        int batchSize = 2000,
+        int? maxDegreeOfParallelism = null, 
+        CancellationToken cancellationToken = default) 
+        where TId : StreamId 
+        where TAggregate : class, IAggregateRoot<TId, TEvent>, new()
+        where TEvent : IDomainEvent<TId>
+    {
+        var parallelOptions = GetParallelOptions(cancellationToken, maxDegreeOfParallelism);
+
+        await Parallel.ForEachAsync(aggregates, parallelOptions, async (aggregate, token) =>
+            await CommitEvents<TId, TAggregate, TEvent>(aggregate, cancellationToken: token)
+        );
+    }
+
+    public async Task AppendEventsToStream(IStreamId streamId, StreamState streamState, CancellationToken cancellationToken = default, params EventData[] eventData)
+    {
+        var stream = streamId.ToString() ??
+                     throw new ArgumentException("StreamId value can not be null", nameof(streamId));
+        var _ = await _eventStoreClient.AppendToStreamAsync(stream, streamState, eventData, cancellationToken: cancellationToken);
+    }
+
+    public async Task CommitEvents<TId, TAggregate, TEvent>(
         TAggregate aggregate,
         int batchSize = 2000,
         bool shouldProcess = true,
@@ -239,7 +234,7 @@ public class EventStore : IEventStore
         aggregate.EventsCommitted();
     }
 
-    public async Task CommitEventsInOrderParallel<TId, TAggregate, TEvent>(
+    public async Task CommitEvents<TId, TAggregate, TEvent>(
         IEnumerable<TAggregate> aggregates,
         int? maxDegreeOfParallelism = null,
         CancellationToken cancellationToken = default)

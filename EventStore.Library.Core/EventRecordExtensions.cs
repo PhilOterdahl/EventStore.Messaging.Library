@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using EventStore.Client;
 using EventStore.Library.Core.Event;
@@ -8,26 +7,12 @@ namespace EventStore.Library.Core;
 
 public static class EventRecordExtensions
 {
-    private static readonly ConcurrentDictionary<string, Type> EventTypes = new();
-
-    public static Type GetEventType<T>(this EventRecord @event) =>
-        EventTypes.GetOrAdd(@event.EventType, name =>
-        {
-            var eventInterfaceType = typeof(T);
-            var implementationsTypes = AppDomain
-                .CurrentDomain
-                .GetAssemblies()
-                .SelectMany(assembly => assembly.GetTypes())
-                .Where(implementationType => eventInterfaceType.IsAssignableFrom(implementationType))
-                .ToArray();
-
-            return implementationsTypes.First(type => type.Name == @event.EventType);
-        });
+    public static Type GetEventType(this EventRecord @event) => EventTypes.Types[@event.EventType];
 
     public static TEvent ToEvent<TEvent>(this ResolvedEvent @event) where TEvent : IEventStoreEvent
     {
         var eventJson = Encoding.Default.GetString(@event.Event.Data.ToArray());
-        var eventType = @event.Event.GetEventType<TEvent>();
+        var eventType = @event.Event.GetEventType();
 
         var deserializedEvent = (TEvent)JsonSerializer.Deserialize(
             eventJson,

@@ -1,4 +1,5 @@
-﻿using EventStore.Client;
+﻿using System.Reflection;
+using EventStore.Client;
 using Grpc.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,12 +10,19 @@ public static class EventStoreRegistration
 {
     public static IServiceCollection AddEventStore(this IServiceCollection services,
         EventStoreClientOptions eventStoreClientOptions,
-        Func<EventStoreOptions, EventStoreOptions>? configureOptions)
+        Action<EventStoreOptions>? configureOptions,
+        params Assembly[] assemblies)
     {
         var options = new EventStoreOptions(eventStoreClientOptions);
-        options = configureOptions is not null 
-            ? configureOptions(options)
-            : options;
+        configureOptions?.Invoke(options);
+
+        if (assemblies is null)
+            throw new ArgumentNullException(nameof(assemblies));
+
+        if (!assemblies.Any())
+            throw new ArgumentException("assemblies can not be empty");
+
+        EventTypes.SetEventTypes(assemblies);
 
         return services
             .AddSingleton(options)

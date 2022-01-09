@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using EventStore.Library.Core;
+using EventStore.Library.Core.Domain.Aggregate;
 using EventStore.Library.Testing.Core;
 using EventStore.Library.Tests.Core.TestAggregates;
 using EventStore.Library.Tests.Core.TestAggregates.Events;
@@ -20,7 +21,7 @@ public class AggregateRootTests : TestBaseAggregateRoot<User, UserId, IUserEvent
     {
        Given(new UserEnrolledEvent(UserId.Create(), "Pepe", "Sliva", "pepe.silva@hotmail.com", "Pepe Silva"));
 
-       Throws<AggregateRootAlreadyCreatedException>(user =>  user.Enroll("Pepe", "Silva", "pepe.silva@hotmail.com", "Pepe Silva"));
+       Throws<AggregateRootAlreadyCreatedException>(user =>  user.EnrollUser("Pepe", "Silva", "pepe.silva@hotmail.com", "Pepe Silva"));
     }
 
     [Fact]
@@ -55,5 +56,14 @@ public class AggregateRootTests : TestBaseAggregateRoot<User, UserId, IUserEvent
         Given(userEnrolled, contactInformationEdited);
 
         Then(user => ((UserState)user).Created.Should().Be(userEnrolled.Date));
+    }
+
+    [Fact]
+    public void Aggregate_root_throws_domain_event_not_handled_exception_when_state_modification_action_is_not_found_and_ignore_state_attribute_is_not_applied_to_event()
+    {
+        var userEnrolled = new UserEnrolledEvent(UserId.Create(), "Pepe", "Sliva", "pepe.silva@hotmail.com", "Pepe Silva");
+        Given(userEnrolled);
+
+        Throws<DomainEventNotHandledException>(user => user.AccountLocked("Pepe Silva"));
     }
 }

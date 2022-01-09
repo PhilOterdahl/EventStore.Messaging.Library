@@ -309,12 +309,10 @@ internal class MessageBus : BackgroundService, IMessageBus
     {
         if (environment.IsDevelopment())
         {
-#pragma warning disable S4830
             return new HttpClient(new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
             });
-#pragma warning restore S4830
         }
 
         var plainTextBytes = System.Text.Encoding.UTF8.GetBytes($"{_eventStoreOptions.ClientOptions.Username}:{_eventStoreOptions.ClientOptions.Password}");

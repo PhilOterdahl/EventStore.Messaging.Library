@@ -55,7 +55,7 @@ public abstract class AggregateRoot<TId, TBaseEvent, TState> : IAggregateRoot<TI
 
     private void Initialize()
     {
-        SetUp();
+        RegisterStateModification();
         _initialized = true;
     }
 
@@ -105,13 +105,4 @@ public abstract class AggregateRoot<TId, TBaseEvent, TState> : IAggregateRoot<TI
 
     public void ClearUncommittedEvents() =>
         UncommittedEvents.Clear();
-
-    private void ValidateEvents() =>
-        _stateModifier.ValidateEvents();
-
-    private void SetUp()
-    {
-        RegisterStateModification();
-        ValidateEvents();
-    }
 }

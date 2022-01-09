@@ -7,16 +7,16 @@ public interface IUserEvent : IDomainEvent<UserId>
 {
 }
 
-public class UserEvent : DomainEvent<UserId>, IUserEvent
+public abstract class UserEvent : DomainEvent<UserId>, IUserEvent
 {
-    public UserEvent(UserId streamId, string by) : base(streamId, by)
+    protected UserEvent(UserId streamId, string by) : base(streamId, by)
     {
     }
 }
 
-public class UserAsyncEvent : AsyncDomainEvent<UserId>, IUserEvent
+public abstract class UserAsyncEvent : AsyncDomainEvent<UserId>, IUserEvent
 {
-    public UserAsyncEvent(UserId streamId, string by) : base(streamId, by)
+    protected UserAsyncEvent(UserId streamId, string by) : base(streamId, by)
     {
     }
 }

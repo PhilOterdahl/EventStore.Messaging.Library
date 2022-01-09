@@ -31,6 +31,9 @@ internal class CachingQueryPipelineBehavior<TQuery, TResponse> : IQueryPipelineB
             ? ((TResponse)Cache.GetCachedQueryResponse(cacheKey), true)
             : (await next(), false);
 
+        if (response is null)
+            return response;
+
         if (!loadedFromCache)
         {
             Cache.AddQueryResponse(cacheKey, response);

@@ -5,38 +5,37 @@ using EventStore.Library.Core;
 using EventStore.Library.Messaging.Command;
 using EventStore.Library.Messaging.Event;
 
-namespace EventStore.Library.Messaging
+namespace EventStore.Library.Messaging;
+
+internal static class EventRecordExtensions
 {
-    internal static class EventRecordExtensions
+    public static IAsyncEvent ToAsyncEvent(this ResolvedEvent @event)
     {
-        public static IAsyncEvent ToAsyncEvent(this ResolvedEvent @event)
-        {
-            var eventJson = Encoding.Default.GetString(@event.Event.Data.ToArray());
-            var eventType = @event.Event.GetEventType();
+        var eventJson = Encoding.Default.GetString(@event.Event.Data.ToArray());
+        var eventType = @event.Event.GetEventType();
 
-            var deserializedEvent = (IAsyncEvent)JsonSerializer.Deserialize(
-                eventJson,
-                eventType,
-                EventStoreOptions.SerializerOptions
-            )!;
+        var deserializedEvent = (IAsyncEvent)JsonSerializer.Deserialize(
+            eventJson,
+            eventType,
+            EventStoreOptions.SerializerOptions
+        )!;
 
-            deserializedEvent.Id = @event.Event.EventId;
-            return deserializedEvent;
-        }
+        deserializedEvent.Id = @event.Event.EventId;
+        return deserializedEvent;
+    }
 
-        public static IAsyncCommand ToAsyncCommand(this ResolvedEvent @event)
-        {
-            var eventJson = Encoding.Default.GetString(@event.Event.Data.ToArray());
-            var eventType = @event.Event.GetEventType();
+    public static IAsyncCommand ToAsyncCommand(this ResolvedEvent @event)
+    {
+        var eventJson = Encoding.Default.GetString(@event.Event.Data.ToArray());
+        var eventType = @event.Event.GetEventType();
 
-            var deserializedEvent = (IAsyncCommand)JsonSerializer.Deserialize(
-                eventJson,
-                eventType,
-                EventStoreOptions.SerializerOptions
-            )!;
+        var deserializedEvent = (IAsyncCommand)JsonSerializer.Deserialize(
+            eventJson,
+            eventType,
+            EventStoreOptions.SerializerOptions
+        )!;
 
-            deserializedEvent.Id = @event.Event.EventId;
-            return deserializedEvent;
-        }
+        deserializedEvent.Id = @event.Event.EventId;
+        return deserializedEvent;
     }
 }

@@ -10,14 +10,14 @@ public abstract class ValueObject
     /// this Value Object.
     /// </summary>
     /// <returns>Collection of atomic values.</returns>
-    protected abstract IEnumerable<object> GetAtomicValues();
+    protected abstract IEnumerable<object?> GetAtomicValues();
 
     /// <summary>
     /// Compares two Value Objects according to atomic values returned by <see cref="GetAtomicValues"/>.
     /// </summary>
     /// <param name="other">Object to compare to.</param>
     /// <returns>True if objects are considered equal.</returns>
-    public override bool Equals(object other)
+    public override bool Equals(object? other)
     {
         if (other == null || other.GetType() != GetType())
             return false;
@@ -52,7 +52,7 @@ public abstract class ValueObject
             .Aggregate((x, y) => x ^ y);
     }
 
-    public static bool operator ==(ValueObject x, ValueObject y)
+    public static bool operator ==(ValueObject? x, ValueObject? y)
     {
         if (x is null && y is null)
             return true;
@@ -63,7 +63,7 @@ public abstract class ValueObject
         return x.Equals(y);
     }
 
-    public static bool operator !=(ValueObject x, ValueObject y)
+    public static bool operator !=(ValueObject? x, ValueObject? y)
     {
         return !(x == y);
     }

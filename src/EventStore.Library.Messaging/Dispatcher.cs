@@ -25,10 +25,10 @@ internal class Dispatcher : IDispatcher
         CancellationToken cancellationToken = default) where TAsyncCommand : IAsyncCommand =>
         await _publisher.Enqueue(asyncCommands, maxDegreeOfParallelism, batchSize, cancellationToken);
 
-    public async Task<TResponse> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default) =>
+    public async Task<TResponse?> Send<TResponse>(ICommand<TResponse> command, CancellationToken cancellationToken = default) =>
         await _sender.Send(command, cancellationToken);
 
-    public async Task<TResponse> Send<TResponse>(IQuery<TResponse> query, CancellationToken cancellationToken = default) => 
+    public async Task<TResponse?> Send<TResponse>(IQuery<TResponse> query, CancellationToken cancellationToken = default) => 
         await _sender.Send(query, cancellationToken);
 
     public async Task Publish(IAsyncEvent asyncEvent, CancellationToken cancellationToken = default) => 

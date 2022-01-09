@@ -10,7 +10,7 @@ public abstract class StreamId : ValueObject, IStreamId
             throw new ArgumentNullException(nameof(value));
 
         if (string.IsNullOrWhiteSpace(value))
-            throw new InvalidOperationException("Id can not be empty or whitespace");
+            throw new ArgumentException("Id can not be empty or whitespace", nameof(value));
 
         Value = value;
     }
@@ -19,7 +19,7 @@ public abstract class StreamId : ValueObject, IStreamId
     public abstract string Category { get; }
 
     public override string ToString() => $"{Category}-{Value}";
-    public static implicit operator string(StreamId id) => id?.Value;
+    public static implicit operator string?(StreamId id) => id?.Value;
 
     protected override IEnumerable<object> GetAtomicValues()
     {

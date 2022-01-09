@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using System.Reflection;
+﻿using System.Reflection;
 using EventStore.Library.Core.Event;
 
 namespace EventStore.Library.Core.Domain.Aggregate;
@@ -9,12 +8,6 @@ public class AggregateRootStateModifier<TBaseEvent, TId, TState>
     where TId : StreamId
     where TState : AggregateRootState<TId>, new()
 {
-    public static readonly IReadOnlyCollection<Type> EventTypes =
-        Core
-            .EventTypes
-            .GetTypes(typeof(TBaseEvent))
-            .ToImmutableArray();
-
     private readonly IDictionary<string, IAggregateRootEventHandler<TId, TState>> _modifyStateHandlers = new Dictionary<string, IAggregateRootEventHandler<TId, TState>>();
 
     public void When<TEvent>(Func<TState, TEvent, TState> modifyStateAction) where TEvent : TBaseEvent
@@ -38,15 +31,16 @@ public class AggregateRootStateModifier<TBaseEvent, TId, TState>
     public TState ApplyEvent(TState state, TBaseEvent @event)
     {
         var eventType = @event.GetType();
+        var key = @event.GetEventType();
         var shouldNotModifyState = eventType
             .GetCustomAttribute<IgnoreStateModificationAttribute>() is not null;
 
         if (shouldNotModifyState)
             return state;
 
-        var handler = _modifyStateHandlers.ContainsKey(eventType.Name)
-            ? _modifyStateHandlers[eventType.Name]
-            : throw new DomainEventNotHandledException(eventType.Name);
+        var handler = _modifyStateHandlers.ContainsKey(key)
+            ? _modifyStateHandlers[key]
+            : throw new DomainEventNotHandledException(key);
 
         state = UpdateLastUpdated(@event, state);
 
@@ -54,16 +48,6 @@ public class AggregateRootStateModifier<TBaseEvent, TId, TState>
             state = SetCreated(@event, state);
 
         return handler.ModifyState(state, @event);
-    }
-
-    public void ValidateEvents()
-    {
-        var notHandledEvent = EventTypes
-            .Where(eventType => eventType.GetCustomAttribute<IgnoreStateModificationAttribute>() is null)
-            .FirstOrDefault(eventType => !_modifyStateHandlers.ContainsKey(eventType.Name));
-
-        if (notHandledEvent is not null)
-            throw new DomainEventNotHandledException(notHandledEvent.Name);
     }
 
     private static TState SetCreated(TBaseEvent @event, TState state)

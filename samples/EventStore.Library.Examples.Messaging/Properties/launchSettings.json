@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "EventStore.Library.Examples.AspNetCore": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "environmentVariables": {},
+      "distributionName": ""
+    },
+    "Profile 1": {
+      "commandName": "IIS",
+      "launchBrowser": true
+    }
+  }
+}

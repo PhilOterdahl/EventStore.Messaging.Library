@@ -10,7 +10,17 @@ public class User : AggregateRoot<UserId, IUserEvent, UserState>
     {
     }
 
-    public User Enroll(
+    public static User Enroll(
+        string firstName,
+        string lastName,
+        string email,
+        string by)
+    {
+        var user = new User();
+        return user.EnrollUser(firstName, lastName, email, by);
+    }
+
+    public User EnrollUser(
         string firstName,
         string lastName,
         string email,
@@ -30,6 +40,12 @@ public class User : AggregateRoot<UserId, IUserEvent, UserState>
 
         var contactInformationEdited = new UserContactInformationEditedEvent(Id, email, by);
         return (User)AddEvent(contactInformationEdited);
+    }
+
+    public User AccountLocked(string by)
+    {
+        var accountLocked = new UserAccountLockedEvent(Id, by);
+        return (User)AddEvent(accountLocked);
     }
 
     protected override void RegisterStateModification()
